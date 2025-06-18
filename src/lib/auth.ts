@@ -1,4 +1,4 @@
-import NextAuth, { NextAuthOptions } from "next-auth";
+import { NextAuthOptions } from "next-auth";
 import Auth0Provider from "next-auth/providers/auth0";
 
 export const authOptions: NextAuthOptions = {
@@ -17,38 +17,26 @@ export const authOptions: NextAuthOptions = {
   ],
   callbacks: {
     async jwt({ token, account, profile }) {
-      if (account?.access_token) {
-        token.accessToken = account.access_token;
-      }
-
+      if (account?.access_token) token.accessToken = account.access_token;
       if (profile && Array.isArray((profile as any).roles)) {
         token.roles = (profile as any).roles;
       } else {
         token.roles = ["user"];
       }
-
       return token;
     },
     async session({ session, token }) {
       if (typeof token.accessToken === "string") {
         session.accessToken = token.accessToken;
       }
-
-      if (Array.isArray(token.roles)) {
-        session.user.roles = token.roles as string[];
-      }
-
+      if (token.roles) session.user.roles = token.roles as string[];
       return session;
     },
   },
-  session: {
-    strategy: "jwt",
-  },
+  session: { strategy: "jwt" },
   pages: {
     signIn: "/auth/login",
     error: "/auth/error",
   },
   secret: process.env.NEXTAUTH_SECRET,
 };
-
-export default NextAuth(authOptions);
